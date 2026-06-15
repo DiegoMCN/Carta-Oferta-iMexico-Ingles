@@ -860,20 +860,34 @@
     <!-- FINANCIERO -->
     <div class="form-section">
       <div class="section-title">Financial Structure</div>
+      <!-- Toggle moneda -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <span style="font-size:10.5px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted);">Currency:</span>
+        <div style="display:flex; border:1px solid var(--mid-gray); border-radius:3px; overflow:hidden;">
+          <button id="btn_usd" onclick="setCurrency('USD')" style="font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; padding:5px 12px; border:none; background:var(--navy); color:var(--gold); cursor:pointer;">USD $</button>
+          <button id="btn_mxn" onclick="setCurrency('MXN')" style="font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; padding:5px 12px; border:none; background:var(--cream); color:var(--text-muted); cursor:pointer;">MXN $</button>
+        </div>
+        <span id="tipo_cambio_wrap" style="display:none; align-items:center; gap:6px;">
+          <span style="font-size:10px; color:var(--text-muted);">TC:</span>
+          <input type="number" id="tipo_cambio" value="17.5" min="1" step="0.1"
+            style="width:64px; font-size:12px; font-family:'DM Sans',sans-serif; border:1px solid var(--mid-gray); border-radius:3px; padding:4px 6px; background:var(--cream);"
+            oninput="update()">
+        </span>
+      </div>
       <div class="field-grid">
         <div class="field">
-          <label>List Price (USD $)</label>
+          <label id="lbl_precio_lista">List Price (USD $)</label>
           <input type="text" id="precio_lista" placeholder="250,000" oninput="calcular(); update()">
         </div>
         <div class="field">
-          <label>Offer Price (USD $)</label>
+          <label id="lbl_precio_oferta">Offer Price (USD $)</label>
           <input type="text" id="precio_oferta" placeholder="235,000" oninput="calcular(); update()">
         </div>
       </div>
 
       <div class="field-grid" style="margin-top:12px;">
         <div class="field">
-          <label>Reservation Amount (USD $)</label>
+          <label id="lbl_reserva">Reservation Amount (USD $)</label>
           <input type="text" id="reserva" placeholder="5,000" oninput="calcular();update()">
         </div>
         <div class="field">
@@ -1294,13 +1308,11 @@ function aplicarEsquema(p1, p2, p3) {
 
 function calcular() {
   validarPcts();
-  const oferta = parseFloat((v('precio_oferta').value || '').replace(/,/g,''));
+  const oferta  = parseFloat((v('precio_oferta').value || '').replace(/,/g,''));
   const [p1, p2, p3] = getPcts();
   if (!isNaN(oferta) && oferta > 0) {
-    const reserva = parseFloat((v('reserva').value || '0').replace(/,/g,'')) || 0;
     const eng = Math.round(oferta * p1 / 100);
     v('enganche').value      = eng.toLocaleString('en-US');
-    v('saldo_enganche_calc')  && (v('saldo_enganche_calc').value = Math.max(0, eng - reserva).toLocaleString('en-US'));
     v('durante_obra').value  = Math.round(oferta * p2 / 100).toLocaleString('en-US');
     v('saldo_entrega').value = Math.round(oferta * p3 / 100).toLocaleString('en-US');
   } else {
@@ -1332,8 +1344,8 @@ function update() {
 
   const lista  = v('precio_lista').value;
   const oferta = v('precio_oferta').value;
-  set('p_precio_lista',   lista  ? fmtMoney(lista)  : '');
-  set('p_precio_oferta',  oferta ? fmtMoney(oferta) : '');
+  set('p_precio_lista',   lista  ? fmtMoneyFull(lista) : '');
+  set('p_precio_oferta',  oferta ? fmtMoneyFull(oferta) : '');
 
   // Porcentajes en preview
   const [p1,p2,p3] = getPcts();
@@ -1349,22 +1361,22 @@ function update() {
 
   if (reservaNum > 0) {
     if (rowRes) rowRes.style.display = '';
-    set('p_reserva',       '$ ' + reservaNum.toLocaleString('en-US'));
+    set('p_reserva',       getSymbol() + ' ' + reservaNum.toLocaleString('en-US'));
     set('p_fecha_reserva', fmtFecha(v('fecha_reserva').value));
-    set('p_enganche',      '$ ' + engNeto.toLocaleString('en-US'));
+    set('p_enganche',      getSymbol() + ' ' + engNeto.toLocaleString('en-US'));
   } else {
     if (rowRes) rowRes.style.display = 'none';
-    set('p_enganche', engBruto ? '$ ' + engBruto.toLocaleString('en-US') : '');
+    set('p_enganche', engBruto ? getSymbol() + ' ' + engBruto.toLocaleString('en-US') : '');
   }
 
   set('p_fecha_enganche', fmtFecha(v('fecha_enganche').value));
-  set('p_durante_obra',   v('durante_obra').value  ? '$ ' + v('durante_obra').value  : '');
-  set('p_saldo_entrega',  v('saldo_entrega').value ? '$ ' + v('saldo_entrega').value : '');
+  set('p_durante_obra',   v('durante_obra').value  ? getSymbol() + ' ' + v('durante_obra').value : '');
+  set('p_saldo_entrega',  v('saldo_entrega').value ? getSymbol() + ' ' + v('saldo_entrega').value : '');
   set('p_pagos_obra',     v('pagos_obra').value);
   set('p_fecha_entrega',  fmtFecha(v('fecha_entrega').value));
 
   set('p_firma_cliente',  v('nombre').value);
-  set('p_firma_asesor',   v('broker_inhouse').value);
+  set('p_firma_asesor',   v('broker_externo').value);
   updateNotas();
 }
 
@@ -1540,10 +1552,44 @@ function getCamposData() {
     'fecha_nac','nacionalidad','ocupacion','broker_inhouse','agencia','broker_externo',
     'desarrollo','unidad','metros','entrega','precio_lista','precio_oferta',
     'reserva','fecha_reserva','pagos_obra','fecha_enganche','fecha_entrega',
-    'pct1','pct2','pct3','notas'];
+    'pct1','pct2','pct3','notas','tipo_cambio'];
   const datos = {};
   campos.forEach(id => { if (v(id)) datos[id] = v(id).value; });
   return datos;
+}
+
+// ── MONEDA ───────────────────────────────────────────────────
+let currentCurrency = 'USD';
+
+function setCurrency(cur) {
+  currentCurrency = cur;
+  const isUSD = (cur === 'USD');
+  const btnUSD = document.getElementById('btn_usd');
+  const btnMXN = document.getElementById('btn_mxn');
+  if (btnUSD) {
+    btnUSD.style.background = isUSD ? 'var(--navy)' : 'var(--cream)';
+    btnUSD.style.color = isUSD ? 'var(--gold)' : 'var(--text-muted)';
+  }
+  if (btnMXN) {
+    btnMXN.style.background = !isUSD ? 'var(--navy)' : 'var(--cream)';
+    btnMXN.style.color = !isUSD ? 'var(--gold)' : 'var(--text-muted)';
+  }
+  const tcWrap = document.getElementById('tipo_cambio_wrap');
+  if (tcWrap) tcWrap.style.display = isUSD ? 'none' : 'flex';
+  ['lbl_precio_lista','lbl_precio_oferta','lbl_reserva'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = el.textContent.replace(/USD \$|MXN \$/, isUSD ? 'USD $' : 'MXN $');
+  });
+  update();
+}
+
+function getSymbol() { return currentCurrency === 'MXN' ? 'MX$' : '$'; }
+
+function fmtMoneyFull(str) {
+  if (!str) return '';
+  const num = parseFloat((str + '').replace(/,/g,''));
+  if (isNaN(num)) return str;
+  return getSymbol() + ' ' + num.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
 }
 
 // ── CAMPOS SERIALIZABLES ─────────────────────────────────────
@@ -1551,7 +1597,7 @@ const CAMPOS = ['nombre','fecha','telefono','direccion','correo','estado_civil',
   'fecha_nac','nacionalidad','ocupacion','broker_inhouse','agencia','broker_externo',
   'desarrollo','unidad','metros','entrega','precio_lista','precio_oferta',
   'reserva','fecha_reserva','pagos_obra','fecha_enganche','fecha_entrega',
-  'pct1','pct2','pct3','notas'];
+  'pct1','pct2','pct3','notas','tipo_cambio'];
 
 // ── GUARDAR / CARGAR LOCAL ────────────────────────────────────
 function guardarLocal() {

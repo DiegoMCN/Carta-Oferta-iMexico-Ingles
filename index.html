@@ -337,7 +337,7 @@
 
   .doc-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 22px;
+    font-size: 30px;
     font-weight: 500;
     color: var(--navy);
     margin-bottom: 20px;
@@ -371,7 +371,7 @@
     color: var(--navy);
     background: var(--warm-gray);
     white-space: nowrap;
-    width: 38%;
+    width: 1%;
   }
   .doc-table td.value {
     color: var(--text);
@@ -824,8 +824,8 @@
           <input type="text" id="broker_inhouse" placeholder="iMexico advisor's name" oninput="update()">
         </div>
         <div class="field full">
-          <label>Agency</label>
-          <input type="text" id="agencia" placeholder="iMexico Real Estate" oninput="update()">
+          <label>External Agency</label>
+          <input type="text" id="agencia" placeholder="Agency name" oninput="update()">
         </div>
         <div class="field full">
           <label>External Broker (optional)</label>
@@ -972,19 +972,7 @@
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
         New Letter (clear)
       </button>
-      <button class="btn btn-ghost" onclick="guardarLocal()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM17 21v-8H7v8M7 3v5h8"/></svg>
-        Save Draft
-      </button>
-      <button class="btn btn-ghost" onclick="cargarLocal()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-        Load Draft
-      </button>
       <div style="margin-top:6px; border-top:1px solid var(--mid-gray); padding-top:10px;">
-        <button class="btn" style="background:var(--gold); color:var(--navy); font-weight:600; width:100%; justify-content:center;" onclick="generarLinkCliente()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-          Generate Signature Link
-        </button>
         <div id="link_output" style="display:none; margin-top:10px;">
           <div style="font-size:10px; font-weight:600; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:5px;">Link generado:</div>
           <div style="display:flex; gap:6px;">
@@ -1175,25 +1163,6 @@
             <div class="firma-nombre" id="p_firma_cliente"></div>
           </div>
 
-          <!-- Asesor -->
-          <div class="firma-box">
-            <div class="firma-canvas-wrap" id="wrap_asesor">
-              <canvas id="canvas_asesor" height="70"></canvas>
-            </div>
-            <div class="firma-actions no-print">
-              <button class="firma-btn" onclick="limpiarFirma('asesor')" title="Clear">
-                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg> Clear
-              </button>
-              <label class="firma-btn upload-btn" title="Upload image">
-                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Upload
-                <input type="file" class="firma-file-input" accept="image/*" onchange="subirFirma(event,'asesor')">
-              </label>
-            </div>
-            <div class="firma-line"></div>
-            <div class="firma-label">Broker Signature</div>
-            <div class="firma-nombre" id="p_firma_asesor"></div>
-          </div>
-
           <!-- Desarrollador -->
           <div class="firma-box">
             <div class="firma-canvas-wrap" id="wrap_desarrollador">
@@ -1334,7 +1303,7 @@ function update() {
   set('p_nacionalidad',   v('nacionalidad').value);
   set('p_ocupacion',      v('ocupacion').value);
   set('p_broker_inhouse', v('broker_inhouse').value);
-  set('p_agencia',        v('agencia').value || 'iMexico Real Estate');
+  set('p_agencia',        v('agencia').value);
   set('p_broker_externo', v('broker_externo').value);
 
   set('p_desarrollo',     v('desarrollo').value);
@@ -1704,7 +1673,7 @@ function activarModoCliente(b64) {
     // Modo asesor: valores por defecto
     const hoy = new Date().toISOString().split('T')[0];
     v('fecha').value = hoy;
-    v('agencia').value = 'iMexico Real Estate';
+    v('agencia').value = '';
     update();
   }
 
